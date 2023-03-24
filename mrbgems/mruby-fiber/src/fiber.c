@@ -167,6 +167,9 @@ fiber_check_cfunc(mrb_state *mrb, struct mrb_context *c)
 static void
 fiber_switch_context(mrb_state *mrb, struct mrb_context *c)
 {
+  if(!c) {
+    mrb_raise(mrb, E_FIBER_ERROR, "Switching to invalid context");
+  }
   if (mrb->c->fib) {
     mrb_write_barrier(mrb, (struct RBasic*)mrb->c->fib);
   }
