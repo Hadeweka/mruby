@@ -286,6 +286,10 @@ fiber_switch(mrb_state *mrb, mrb_value self, mrb_int len, const mrb_value *a, mr
   if (vmexec) {
     c->vmexec = TRUE;
     value = mrb_vm_exec(mrb, c->ci->proc, c->ci->pc);
+    if(!mrb) {
+      printf("Error X\n");
+      return fiber_error(mrb, "Context got deleted before here");
+    }
     if(!mrb->c) {
       printf("Error 11\n");
       return fiber_error(mrb, "Context got deleted before here");
