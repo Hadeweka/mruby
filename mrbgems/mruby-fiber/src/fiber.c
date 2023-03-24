@@ -204,6 +204,10 @@ fiber_switch(mrb_state *mrb, mrb_value self, mrb_int len, const mrb_value *a, mr
   struct mrb_context *old_c = mrb->c;
   enum mrb_fiber_state status;
   mrb_value value;
+  
+  if(!old_c) {
+    return fiber_error(mrb, "Context was somehow deleted");
+  }
 
   if (resume && c == mrb->c) {
     return fiber_error(mrb, "attempt to resume the current fiber");
@@ -272,6 +276,9 @@ fiber_switch(mrb_state *mrb, mrb_value self, mrb_int len, const mrb_value *a, mr
   if (vmexec) {
     c->vmexec = TRUE;
     value = mrb_vm_exec(mrb, c->ci->proc, c->ci->pc);
+    if(!mrb->c) {
+      return fiber_error(mrb, "Context got deleted before here");
+    }
     mrb->c = old_c;
   }
   else {
