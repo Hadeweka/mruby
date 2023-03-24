@@ -81,6 +81,7 @@ fiber_init(mrb_state *mrb, mrb_value self)
   }
   p = mrb_proc_ptr(blk);
   if (MRB_PROC_CFUNC_P(p)) {
+    printf("Error 1\n");
     mrb_raise(mrb, E_FIBER_ERROR, "tried to create Fiber from C defined method");
   }
 
@@ -136,6 +137,7 @@ fiber_check(mrb_state *mrb, mrb_value fib)
 
   mrb_assert(f->tt == MRB_TT_FIBER);
   if (!f->cxt) {
+    printf("Error 2\n");
     mrb_raise(mrb, E_FIBER_ERROR, "uninitialized Fiber");
   }
   return f->cxt;
@@ -159,6 +161,7 @@ fiber_check_cfunc(mrb_state *mrb, struct mrb_context *c)
 
   for (ci = c->ci; ci >= c->cibase; ci--) {
     if (ci->cci > 0) {
+      printf("Error 3\n");
       mrb_raise(mrb, E_FIBER_ERROR, "can't cross C function boundary");
     }
   }
@@ -168,6 +171,7 @@ static void
 fiber_switch_context(mrb_state *mrb, struct mrb_context *c)
 {
   if(!c) {
+    printf("Error 4\n");
     mrb_raise(mrb, E_FIBER_ERROR, "Switching to invalid context");
   }
   if (mrb->c->fib) {
@@ -206,10 +210,12 @@ fiber_switch(mrb_state *mrb, mrb_value self, mrb_int len, const mrb_value *a, mr
   mrb_value value;
   
   if(!old_c) {
+    printf("Error 5\n");
     return fiber_error(mrb, "Context was somehow deleted");
   }
 
   if (resume && c == mrb->c) {
+    printf("Error 6\n");
     return fiber_error(mrb, "attempt to resume the current fiber");
   }
 
@@ -218,14 +224,17 @@ fiber_switch(mrb_state *mrb, mrb_value self, mrb_int len, const mrb_value *a, mr
   switch (status) {
   case MRB_FIBER_TRANSFERRED:
     if (resume) {
+      printf("Error 7\n");
       return fiber_error(mrb, "resuming transferred fiber");
     }
     break;
   case MRB_FIBER_RUNNING:
   case MRB_FIBER_RESUMED:
+    printf("Error 8\n");
     return fiber_error(mrb, "double resume");
     break;
   case MRB_FIBER_TERMINATED:
+    printf("Error 9\n");
     return fiber_error(mrb, "resuming dead fiber");
     break;
   default:
@@ -245,6 +254,7 @@ fiber_switch(mrb_state *mrb, mrb_value self, mrb_int len, const mrb_value *a, mr
     mrb_value *b, *e;
 
     if (!c->ci->proc) {
+      printf("Error 10\n");
       return fiber_error(mrb, "double resume (current)");
     }
     if (vmexec) {
@@ -277,6 +287,7 @@ fiber_switch(mrb_state *mrb, mrb_value self, mrb_int len, const mrb_value *a, mr
     c->vmexec = TRUE;
     value = mrb_vm_exec(mrb, c->ci->proc, c->ci->pc);
     if(!mrb->c) {
+      printf("Error 11\n");
       return fiber_error(mrb, "Context got deleted before here");
     }
     mrb->c = old_c;
@@ -371,6 +382,7 @@ fiber_transfer(mrb_state *mrb, mrb_value self)
   mrb_get_args(mrb, "*!", &a, &len);
 
   if (c->status == MRB_FIBER_RESUMED) {
+    printf("Error 12\n");
     mrb_raise(mrb, E_FIBER_ERROR, "attempt to transfer to a resuming fiber");
   }
 
@@ -394,12 +406,15 @@ mrb_fiber_yield(mrb_state *mrb, mrb_int len, const mrb_value *a)
   struct mrb_context *c = mrb->c;
 
   if (!c->prev) {
+    printf("Error 13\n");
     return fiber_error(mrb, "attempt to yield on a not resumed fiber");
   }
   if (c == mrb->root_c) {
+    printf("Error 14\n");
     return fiber_error(mrb, "can't yield from root fiber");
   }
   if (c->prev->status == MRB_FIBER_TRANSFERRED) {
+    printf("Error 15\n");
     return fiber_error(mrb, "attempt to yield on a not resumed fiber");
   }
 
